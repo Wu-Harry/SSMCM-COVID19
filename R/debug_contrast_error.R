@@ -1,3 +1,9 @@
+---
+title: "debug_contrast_error"
+---
+
+# This script is to debug "contrasts can be applied only to factors with 2 or more levels" error. For more information, see https://rdrr.io/github/emilelatour/lamisc/src/R/debug_contrast_error.R
+
 debug_contrast_error <- function(dat, subset_vec = NULL) {
   
   if (!is.null(subset_vec)) {
