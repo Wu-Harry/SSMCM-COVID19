@@ -1,13 +1,10 @@
 ---
-title: "RandFore"
-output: html_document
+title: "Main_code"
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+# Main code of the whole project, includes data cleaning, PSM, SSL-RF, mixture cure model, Cox model, etc.
 
-```{r}
+
 # Read data
 library(xlsx)
 library(dplyr)
@@ -28,9 +25,7 @@ dat_dead <- dat[dat$Patient.Status=="Died",]
 dat_reco <- dat[dat$Patient.Status=="Recovered",]
 dat_cens <- dat[dat$Patient.Status=="Active",]
 
-```
 
-```{r}
 # calculate SOD/SOR/censored time
 library(tidyr)
 dat$ID <- rownames(dat)
@@ -73,9 +68,8 @@ date[which((date$year1==2021)&
               ((date$month1==7)&(date$day1>6))|
               ((date$month1==11)&(date$day1<31)))), 12] <- "delta"
 dat <- cbind(dat, date$period) %>% rename("Period" = "date$period")
-```
 
-```{r}
+
 # baseline table (Table 1)
 library(tableone)
 dat$Age <- as.numeric(dat$Age)
@@ -110,10 +104,7 @@ table1_p <- cbind(table1_ICU_p, table1_period_p)
 table1_p <- table1_p[,-c(6,12)]
 write.csv(table1_p, "/Users/wuhanyu/Desktop/Research/LBS/Covid-19/table1.csv", quote = F)
 
-```
 
-
-```{r}
 # SSL-RF
 library(SSLR)
 library(caret)
@@ -218,10 +209,8 @@ pROC::plot.roc(ROCres)
 plot(ROCres, legacy.axes = TRUE, main="ROC curve best threshold", 
      thresholds="best", # 基于youden指数选择roc曲线最佳阈值点
      print.thres="best") # 在roc曲线上显示最佳阈值点
-```
 
 
-```{r}
 # Compare different w (0.1~0.9) 服务器跑好后存到本地，直接读结果然后计算AUC
 j=1 
 thres=vector()
@@ -250,10 +239,8 @@ plot(ROCres, legacy.axes = TRUE, main="ROC curve best threshold",
      ylim=c(0,1)) # 在roc曲线上显示最佳阈值点
 
 predict_labeled$status <- (predict_labeled$.pred>0.9813)
-```
 
 
-```{r}
 # Compare different w (0.9~1) 由于服务器崩坏，使用小数据集在本地跑
 set.seed(1)
 unl_index <- createDataPartition(y = data_unlabeled$Gendermale, p = 0.01, list = F)
@@ -295,14 +282,13 @@ roc_res$w <- as.numeric(roc_res$w)
 roc_res$auc <- as.numeric(roc_res$auc)
 ggplot(roc_res, mapping = aes(x=w,y=auc,group=p,color=p)) + geom_point() + geom_line() + 
   theme_bw() +theme(panel.grid.major = element_blank(), panel.border = element_blank(), axis.line = element_line(colour ="black"),plot.title = element_text(hjust = 0.5))
-```
 
-```{r}
+
 # The SOD mean of all dead samples
 mean(as.numeric(data[data$Patient.Status=="Died",]$T))
 # = 13.17697
-```
-```{r}
+
+
 # multiple propensity score matching (PSM) for vaccination
 data_filled$Vaccination.Status <- ifelse(data_filled$Vaccination.Status0==1, 0, ifelse(data_filled$Vaccination.Status1==1, 1, ifelse(data_filled$Vaccination.Status2==1, 2, -1)))
 data_filled <- data_filled[data_filled$Vaccination.Status!=-1,]
@@ -320,10 +306,8 @@ match_mod <- matchit(Vaccination.Status ~ Gendermale + Symptom.FeverYes + Cardio
 matchdata12 <- match.data(match_mod)
 
 matchdata <- rbind(matchdata01, matchdata12[matchdata12$Vaccination.Status==2,])
-```
 
 
-```{r}
 # Weibull distribution
 # MLE
 # data_filled <- matchdata[matchdata$Vaccination.Status==0,]
@@ -358,9 +342,8 @@ bbmle::confint(est_weibull)
 0.07286052^(-1/0.96632667)*gamma(1+1/0.96632667) # = 15.26558
 0.08154168^(-1/0.99845329)*gamma(1+1/0.99845329) # = 12.31946
 bbmle::AIC(est_weibull) # = 419084.7
-```
 
-```{r}
+
 # Log-logistic distribution
 # MLE
 nll_log_logis <- function(lambda, k){
@@ -380,9 +363,8 @@ bbmle::confint(est_log_logis)
 pi/(0.1083358*1.8256083*sin(pi/1.8256083)) # = 16.06489
 pi/(0.1134774*1.9059008*sin(pi/1.9059008)) # = 14.5696
 bbmle::AIC(est_log_logis) # = 417884.3
-```
 
-```{r}
+
 # Log-normal distribution
 # MLE
 nll_log_norm <- function(mu, sigma){
@@ -401,9 +383,8 @@ exp(mu + sigma^2/2)
 exp(-7.441506e-01) # mean = mu
 bbmle::confint(est_log_norm)
 AIC(est_log_norm)
-```
 
-```{r}
+
 # Gamma distribution
 # MLE
 nll_gamma <- function(beta, gamma){
@@ -425,9 +406,8 @@ bbmle::confint(est_gamma)
 9.167379*1.345994 # = 12.33924
 9.873567*1.429604 # = 14.11529
 bbmle::AIC(est_gamma) # = 424315.8
-```
 
-```{r}
+
 # AFT Weibull model
 data_filled <- data_filled[data_filled$age!="",]
 rownames(data_filled) <- c(1:nrow(data_filled))
@@ -448,11 +428,8 @@ nll_AFT_1 <- function(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a1
 beta0 <- as.matrix(rep(1,17))
 est_AFT_1 <- bbmle::mle2(minuslogl = nll_AFT_1, start = list(a1=1,a2=1,a3=1,a4=1,a5=1,a6=1,a7=1,a8=1,a9=1,a10=1,a11=1,a12=1,a13=1,a14=1,a15=1,a16=1,a17=1,sigma=1), method = "BFGS")
 
-```
 
 
-
-```{r}
 # --------- SSMC Cox model --------- #
 
 ## Data preparation
@@ -560,10 +537,8 @@ ggplot(data_baseline, mapping = aes(x=T,y=S)) +
   xlim(0,40) + 
   labs(x="Time (days)",y="Survival probability") + 
   theme_bw() + theme(panel.border = element_blank())
-```
 
 
-```{r}
 # --------- General Cox model --------- #
 
 # data_cox <- data_filled[data_filled$B==1,]
@@ -636,9 +611,8 @@ ggsurvplot(fit, color = "#2E9FDF",pval = TRUE,  conf.int = TRUE,
            risk.table = TRUE,
            tables.height = 0.2,
            tables.theme = theme_cleantable())
-```
 
-```{r}
+
 # --------- General Mixture Cure model --------- #
 # 可观测治愈视作删失
 library(smcure)
@@ -652,9 +626,3 @@ fit_mxc <- smcure(Surv(T, eta) ~ Gendermale + Vaccination.Status0 + Vaccination.
                   cureform = ~ Gendermale + Vaccination.Status0 + Vaccination.Status1 + Vaccination.Status2 + Vaccination.Statuspartially + Vaccination.Statusyes + Symptom.FeverYes + FLUYes + Fever.HistoryYes + Symptom.Sore.ThroatYes + Symptom.CoughYes + HeadacheYes + Cardiovascular.disease.including.hypertensionYes + DiabetesYes + Is.Home.Quarantine.Yes + age, 
                   data = data_mxc, 
                   model = "ph")
-```
-
-
-下一步：
-1.第三个模型：mxcure
-2.proposed method是否有问题？死亡治愈的T一起算？
