@@ -5,6 +5,7 @@ date: '2023-03-14'
 
 # This script is to fit general paramatric survival model use 'flexsurv' package.
 
+
 # general survival models for PSM data (alpha & delta)
 data_all <- matchdata[,c("Age", "Gender", "Vaccination.Status", "Patient.Status", "FLU", "Symptom.Fever", "Fever.History", "Symptom.Sore.Throat", "Symptom.Cough", "Symptom.Diarrehea", "Symptom.Breathing.issue", "Headache", "Cardiovascular.disease.including.hypertension", "chronic.lung.disease", "Diabetes", "Pregnancy", "Is.Home.Quarantine.", "ICU.Admission", "Put.On.Ventilator", "T", "Period")] %>% .[.$T!="",]
 for (i in 5:12) {
@@ -12,8 +13,8 @@ for (i in 5:12) {
 }
 # data <- data_all[data_all$ICU.Admission=="Yes",]
 
-
 # Alpha / Delta
+library(flexsur)
 data <- na.omit(data_all[data_all$Period=="alpha",]) # delta
 # SOD
 data <- as.data.frame(data[data$Patient.Status!="Recovered",])
@@ -113,8 +114,8 @@ mean_llogis(shape = 2.42130, scale = 16.46549) # All
 
 
 
-```{r}
 # visualization
+library(ggplot2)
 data_filled$T <- as.numeric(data_filled$T)
 plot_SSLR_Male <- ggplot(data.frame(x = c(1:1000)), aes(x)) + 
   geom_histogram(data = data_filled[data_filled$Gendermale == 1,], 
@@ -144,5 +145,4 @@ plot_SSLR_Female <- ggplot(data.frame(x = c(1:1000)), aes(x)) +
         panel.grid.minor = element_blank(), 
         plot.title = element_text(hjust = 0.5)) # title centered
 plot_SSLR_Male + plot_SSLR_Female
-```
 
