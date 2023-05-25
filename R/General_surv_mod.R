@@ -1,23 +1,18 @@
 ---
 title: "General_surv_mod"
-output: html_document
 date: '2023-03-14'
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+# This script is to fit general paramatric survival model use 'flexsurv' package.
 
-```{r}
 # general survival models for PSM data (alpha & delta)
 data_all <- matchdata[,c("Age", "Gender", "Vaccination.Status", "Patient.Status", "FLU", "Symptom.Fever", "Fever.History", "Symptom.Sore.Throat", "Symptom.Cough", "Symptom.Diarrehea", "Symptom.Breathing.issue", "Headache", "Cardiovascular.disease.including.hypertension", "chronic.lung.disease", "Diabetes", "Pregnancy", "Is.Home.Quarantine.", "ICU.Admission", "Put.On.Ventilator", "T", "Period")] %>% .[.$T!="",]
 for (i in 5:12) {
   data_all[which(data_all[,i]==""), i] <- "No"
 }
 # data <- data_all[data_all$ICU.Admission=="Yes",]
-```
 
-```{r}
+
 # Alpha / Delta
 data <- na.omit(data_all[data_all$Period=="alpha",]) # delta
 # SOD
@@ -66,9 +61,7 @@ mean_llogis(shape = 3.8336, scale = 14.2480) # delta
 # For alpha, Log-logistic distribution provides smallest AIC (271939.7), the median SOR is 17.94756.
 # For delta, Log-logistic distribution provides smallest AIC (243788.7), the median SOR is 15.97718.
 
-```
 
-```{r}
 # SOD
 data_all <- dat[,c("Age", "Gender", "Vaccination.Status", "Patient.Status", "FLU", "Symptom.Fever", "Fever.History", "Symptom.Sore.Throat", "Symptom.Cough", "Symptom.Diarrehea", "Symptom.Breathing.issue", "Headache", "Cardiovascular.disease.including.hypertension", "chronic.lung.disease", "Diabetes", "Pregnancy", "Is.Home.Quarantine.", "ICU.Admission", "Put.On.Ventilator", "T", "Period")] %>% .[.$T!="",]
 data <- data_all[data_all$ICU.Admission=="No",] # Yes
@@ -117,7 +110,7 @@ mean_llogis(shape = 2.42130, scale = 16.46549) # All
 # For non-ICU SOR, Log-logistic distribution provides smallest AIC (1377163), the median SOR is 22.18053.
 # For ICU SOR, Log-logistic distribution provides smallest AIC (569.5771), the median SOR is 48.96752.
 # For all SOR, Log-logistic distribution provides smallest AIC (1377761), the median SOR is 22.18723.
-```
+
 
 
 ```{r}
