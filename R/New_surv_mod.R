@@ -1,22 +1,16 @@
 ---
 title: "New_suvr_mod"
-output: html_document
 date: '2023-05-11'
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+# This script is to fit parametric mixture cure model in SSMCM.
 
-```{r}
 # multiple propensity score matching (PSM) for vaccination
 data_filled <- dat_filled
 data_filled$Vaccination.Status <- ifelse(data_filled$Vaccination.Status0==1, 0, ifelse(data_filled$Vaccination.Status1==1, 1, ifelse(data_filled$Vaccination.Status2==1, 2, -1)))
 data_filled <- data_filled[data_filled$Vaccination.Status!=-1,]
-```
 
 
-```{r}
 catVars <- c("Gendermale", "Vaccination.Status", "Symptom.FeverYes", "Cardiovascular.disease.including.hypertensionYes", "Is.Home.Quarantine.Yes")
 dat_var <- data_filled[data_filled$Vaccination.Status %in% c(0,1),]
 dat_var[,catVars] <- lapply(dat_var[,catVars], as.factor)
@@ -30,10 +24,8 @@ match_mod <- matchit(Vaccination.Status ~ Gendermale + Symptom.FeverYes + Cardio
 matchdata12 <- match.data(match_mod)
 
 matchdata <- rbind(matchdata01, matchdata12[matchdata12$Vaccination.Status==2,])
-```
 
 
-```{r}
 Vars <- c("Age", "Gender", "Vaccination.Status", "Patient.Status", "Symptom.Fever", "Cardiovascular.disease.including.hypertension", "Is.Home.Quarantine.", "Put.On.Ventilator", "Period")
 catVars <- c("Gender", "Vaccination.Status", "Patient.Status", "Symptom.Fever", "Cardiovascular.disease.including.hypertension", "Is.Home.Quarantine.", "Put.On.Ventilator", "Period")
 nonVars <- "Age"
@@ -49,10 +41,8 @@ table1_gender_p <- print(table1_gender, showAllLevels = T,
 # table1_p <- cbind(table1_ICU_p, table1_gender_p)
 # table1_p <- table1_p[,-c(6,12)]
 write.csv(table1_gender_p, "/Users/wuhanyu/Desktop/Research/LBS/Covid-19/table1_gender.csv", quote = F)
-```
 
 
-```{r}
 # multiple propensity score matching (PSM) for gender
 catVars <- c("Gendermale", "Vaccination.Status", "Symptom.Fever", "Cardiovascular.disease.including.hypertension", "Is.Home.Quarantine.")
 Vars <- c("Age", "Gender", "Vaccination.Status", "Patient.Status", "Symptom.Fever", "Cardiovascular.disease.including.hypertension", "Is.Home.Quarantine.", "Put.On.Ventilator", "Period")
@@ -62,10 +52,8 @@ dat_var <- data_all
 dat_var[,catVars] <- lapply(dat_var[,catVars], as.factor)
 match_mod <- matchit(Gender ~ Vaccination.Status + Symptom.Fever + Cardiovascular.disease.including.hypertension + Is.Home.Quarantine., data = dat_var, method = "nearest")
 matchdata <- match.data(match_mod, distance = "Score", weights = "Weight", subclass = "Subclass")
-```
 
 
-```{r}
 # Weibull distribution
 # MLE
 nll_weibull <- function(lambda, k){
@@ -183,10 +171,7 @@ for (i in 0:3) {
 result <- data_frame(Vaccine=0:3, Median=SOD, Model=method, lower=sup, upper=low, AIC=AIC, par1=par1, par2=par2)
 write.csv(result, "/Users/wuhanyu/Desktop/Research/LBS/Covid-19/Result/Vaccine_table.csv", quote = F, row.names = F)
 
-```
 
-
-```{r}
 # Visualization for gender
 shapeM=2.637973
 scaleM=16.45674
@@ -304,5 +289,4 @@ plot_SSLR_Vacc2 <- ggplot(data.frame(x = c(1:1000)), aes(x)) +
         plot.title = element_text(hjust = 0.5)) # title centered
 
 (plot_SSLR_Male + plot_SSLR_Female + plot_SSLR_all) / (plot_SSLR_Vacc0 + plot_SSLR_Vacc1 + plot_SSLR_Vacc2) + plot_annotation(tag_levels = "a")
-```
 
